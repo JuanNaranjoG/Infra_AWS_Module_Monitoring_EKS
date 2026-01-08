@@ -1,10 +1,13 @@
+
 ###############################
-# Variables generales
+# Variables generales (modo manual)
 ###############################
 
-variable "cluster_name" {
-  description = "Nombre del cluster EKS"
-  type        = string
+# Lista manual de nombres de clústeres EKS a monitorear
+variable "cluster_names" {
+  description = "Lista de nombres de clústeres EKS a monitorear"
+  type        = list(string)
+  default     = []
 }
 
 variable "project" {
@@ -22,37 +25,40 @@ variable "bdo_environment" {
   type        = string
 }
 
+# CloudWatch espera listas de ARNs (no maps)
 variable "alarm_actions" {
-  description = "ARNs para las acciones de alarma (SNS, etc.)"
+  description = "Lista de ARNs para las acciones de alarma (SNS, etc.)"
   type        = list(string)
   default     = []
 }
 
 variable "ok_actions" {
+  description = "Lista de ARNs a notificar cuando una alarma vuelva a estado OK"
   type        = list(string)
   default     = []
-  description = "Lista de ARNs a notificar cuando una alarma vuelva a estado OK"
 }
 
-variable "resource_adicional_tags" {
-  type        = map(string)
-  default     = {}
-  description = "Etiquetas adicionales no obligatorias"
+# Fallback opcional si no pasas alarm_actions/ok_actions
+variable "sns_topic_arn" {
+  description = "SNS topic ARN para notificaciones (opcional, se usa como fallback)"
+  type        = string
+  default     = null
 }
 
 variable "resource_tags" {
+  description = "Etiquetas Bdo - Etiquetas Aval"
   type        = map(string)
   default     = {}
-  description = "Etiquetas Bdo - Etiquetas Aval"
 }
 
-variable "sns_topic_arn" {
-  type        = string
-  description = "SNS topic ARN para notificaciones"
+variable "resource_adicional_tags" {
+  description = "Etiquetas adicionales no obligatorias"
+  type        = map(string)
+  default     = {}
 }
 
 ###############################
-# Variables por métrica
+# Variables por métrica (umbrales comunes)
 ###############################
 
 ## CPU
@@ -135,7 +141,7 @@ variable "eks_errors_events_period" {
   default     = 300
 }
 variable "eks_errors_threshold" {
-  description = "Umbral (sum) de errores en servicios (por ejemplo 1 por periodo o porcentaje según métrica)"
+  description = "Umbral (sum) de errores en servicios (por ejemplo 1 por periodo)"
   type        = number
   default     = 1
 }

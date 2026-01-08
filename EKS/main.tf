@@ -1,10 +1,13 @@
+
 ###############################
-# Alarmas EKS
+# Alarmas EKS (iteración manual por clúster)
 ###############################
 
+# CPU
 resource "aws_cloudwatch_metric_alarm" "cpu_utilization" {
+  for_each            = local.selected_clusters
 
-  alarm_name          = "${var.project}-${var.bdo_name_service}-NodeCPU-${var.bdo_environment}"
+  alarm_name          = "${local.alarm_name_base}-${each.key}-NodeCPU"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.eks_cpu_evaluation_periods
   metric_name         = "node_cpu_utilization"
@@ -12,25 +15,23 @@ resource "aws_cloudwatch_metric_alarm" "cpu_utilization" {
   period              = var.eks_cpu_events_period
   statistic           = "Average"
   threshold           = var.eks_cpu_threshold
-  alarm_description   = "Uso de CPU en nodos del EKS ${var.cluster_name}"
- 
-  tags = merge({
-    name = "${var.project}-${var.bdo_name_service}-${var.bdo_environment}"
-    },
-    var.resource_tags
-  )
+  alarm_description   = "Uso de CPU en nodos del EKS ${each.key}"
+
+  tags = merge(local.merged_tags_common, { cluster = each.key })
 
   dimensions = {
-    ClusterName = var.cluster_name
+    ClusterName = each.key
   }
 
-  alarm_actions = var.alarm_actions
-  ok_actions    = var.ok_actions
+  alarm_actions = local.alarm_actions_effective
+  ok_actions    = local.ok_actions_effective
 }
 
+# Memory
 resource "aws_cloudwatch_metric_alarm" "memory_utilization" {
+  for_each            = local.selected_clusters
 
-  alarm_name          = "${var.project}-${var.bdo_name_service}-NodeMemory-${var.bdo_environment}"
+  alarm_name          = "${local.alarm_name_base}-${each.key}-NodeMemory"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.eks_memory_evaluation_periods
   metric_name         = "node_memory_utilization"
@@ -38,25 +39,23 @@ resource "aws_cloudwatch_metric_alarm" "memory_utilization" {
   period              = var.eks_memory_events_period
   statistic           = "Average"
   threshold           = var.eks_memory_threshold
-  alarm_description   = "Uso de memoria en nodos del EKS ${var.cluster_name}"
+  alarm_description   = "Uso de memoria en nodos del EKS ${each.key}"
 
-  tags = merge({
-    name = "${var.project}-${var.bdo_name_service}-${var.bdo_environment}"
-    },
-    var.resource_tags
-  )
+  tags = merge(local.merged_tags_common, { cluster = each.key })
 
   dimensions = {
-    ClusterName = var.cluster_name
+    ClusterName = each.key
   }
 
-  alarm_actions = var.alarm_actions
-  ok_actions    = var.ok_actions
+  alarm_actions = local.alarm_actions_effective
+  ok_actions    = local.ok_actions_effective
 }
 
+# Pod restarts
 resource "aws_cloudwatch_metric_alarm" "pod_restarts" {
+  for_each            = local.selected_clusters
 
-  alarm_name          = "${var.project}-${var.bdo_name_service}-PodRestarts-${var.bdo_environment}"
+  alarm_name          = "${local.alarm_name_base}-${each.key}-PodRestarts"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.eks_restarts_evaluation_periods
   metric_name         = "kube_pod_container_status_restarts_total"
@@ -64,25 +63,23 @@ resource "aws_cloudwatch_metric_alarm" "pod_restarts" {
   period              = var.eks_restarts_events_period
   statistic           = "Sum"
   threshold           = var.eks_restarts_threshold
-  alarm_description   = "Reinicios de contenedores en EKS ${var.cluster_name} exceden el umbral"
+  alarm_description   = "Reinicios de contenedores en EKS ${each.key} exceden el umbral"
 
-  tags = merge({
-    name = "${var.project}-${var.bdo_name_service}-${var.bdo_environment}"
-    },
-    var.resource_tags
-  )
+  tags = merge(local.merged_tags_common, { cluster = each.key })
 
   dimensions = {
-    ClusterName = var.cluster_name
+    ClusterName = each.key
   }
 
-  alarm_actions = var.alarm_actions
-  ok_actions    = var.ok_actions
+  alarm_actions = local.alarm_actions_effective
+  ok_actions    = local.ok_actions_effective
 }
 
+# Replica availability
 resource "aws_cloudwatch_metric_alarm" "replica_availability" {
+  for_each            = local.selected_clusters
 
-  alarm_name          = "${var.project}-${var.bdo_name_service}-ReplicaAvailability-${var.bdo_environment}"
+  alarm_name          = "${local.alarm_name_base}-${each.key}-ReplicaAvailability"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = var.eks_replicas_evaluation_periods
   metric_name         = "kube_deployment_status_replicas_available"
@@ -90,25 +87,23 @@ resource "aws_cloudwatch_metric_alarm" "replica_availability" {
   period              = var.eks_replicas_events_period
   statistic           = "Average"
   threshold           = var.eks_replicas_threshold
-  alarm_description   = "Porcentaje de réplicas disponibles en EKS ${var.cluster_name} por debajo del umbral"
+  alarm_description   = "Réplicas disponibles en EKS ${each.key} por debajo del umbral"
 
-   tags = merge({
-    name = "${var.project}-${var.bdo_name_service}-${var.bdo_environment}"
-    },
-    var.resource_tags
-  )
+  tags = merge(local.merged_tags_common, { cluster = each.key })
 
   dimensions = {
-    ClusterName = var.cluster_name
+    ClusterName = each.key
   }
 
-  alarm_actions = var.alarm_actions
-  ok_actions    = var.ok_actions
+  alarm_actions = local.alarm_actions_effective
+  ok_actions    = local.ok_actions_effective
 }
 
+# Service errors
 resource "aws_cloudwatch_metric_alarm" "service_errors" {
+  for_each            = local.selected_clusters
 
-  alarm_name          = "${var.project}-${var.bdo_name_service}-ServiceErrors-${var.bdo_environment}"
+  alarm_name          = "${local.alarm_name_base}-${each.key}-ServiceErrors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = var.eks_errors_evaluation_periods
   metric_name         = "service_request_error_total"
@@ -116,18 +111,14 @@ resource "aws_cloudwatch_metric_alarm" "service_errors" {
   period              = var.eks_errors_events_period
   statistic           = "Sum"
   threshold           = var.eks_errors_threshold
-  alarm_description   = "Tasa de errores en servicios del EKS ${var.cluster_name} supera el umbral"
+  alarm_description   = "Tasa de errores en servicios del EKS ${each.key} supera el umbral"
 
-   tags = merge({
-    name = "${var.project}-${var.bdo_name_service}-${var.bdo_environment}"
-    },
-    var.resource_tags
-  )
+  tags = merge(local.merged_tags_common, { cluster = each.key })
 
   dimensions = {
-    ClusterName = var.cluster_name
+    ClusterName = each.key
   }
 
-  alarm_actions = var.alarm_actions
-  ok_actions    = var.ok_actions
+  alarm_actions = local.alarm_actions_effective
+  ok_actions    = local.ok_actions_effective
 }
