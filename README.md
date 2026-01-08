@@ -1,6 +1,6 @@
 # 📊 Módulo de Monitoreo para EKS en AWS
 
-Este módulo de **Terraform** permite configurar **alertas de monitoreo** en **Amazon CloudWatch** para el servicio de EKS. Las alertas supervisan errores del servidor, latencia de origen y errores en funciones Lambda@Edge, permitiendo detección temprana de problemas y acción preventiva.
+Este módulo de **Terraform** permite configurar **alertas de monitoreo** en **Amazon CloudWatch** para el servicio de EKS. Las alertas supervisan uso de CPU y memoria de nodos, reinicios de pods, disponibilidad de réplicas y errores de servicios, permitiendo detección temprana de problemas y acción preventiva.
 
 ---
 
@@ -10,7 +10,6 @@ Este módulo de **Terraform** permite configurar **alertas de monitoreo** en **A
 | --------------- | -------------- |
 | Terraform       | >= 1.0         |
 | AWS Provider    | ~> 5.0         |
-| Random Provider | ~> 3.4.3       |
 
 ---
 
@@ -115,12 +114,13 @@ resource "aws_cloudwatch_metric_alarm" "service_errors" {
 ```hcl
 module "eks_monitoring" {
   source                  = "git::git@github.com:bocc-principal/Infra_AWS_Module_Monitoring_EKS.git//eks?ref=main"
-  project                  = var.project
-  bdo_name_service         = var.bdo_name_service
-  bdo_environment          = var.bdo_environment
-  purpose                  = var.purpose
+  source                  = "git::https://github.com/JuanNaranjoG/Infra_AWS_Module_Monitoring_EKS.git//EKS?ref=main"
+  cluster_name            = [var.cluster_name]
+  project                 = var.project
+  bdo_name_service        = var.bdo_name_service
+  bdo_environment         = var.bdo_environment
+  sns_topic_arn           = var.sns_topic_arn
 
-  sns_topic_arn            = var.sns_topic_arn
 }
 ```
 

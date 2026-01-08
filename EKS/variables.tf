@@ -4,10 +4,9 @@
 ###############################
 
 # Lista manual de nombres de clústeres EKS a monitorear
-variable "cluster_names" {
+variable "cluster_name" {
   description = "Lista de nombres de clústeres EKS a monitorear"
   type        = list(string)
-  default     = []
 }
 
 variable "project" {

@@ -25,5 +25,5 @@ locals {
   )
 
   # Set de clústeres seleccionados (manual)
-  selected_clusters = toset(var.cluster_names)
+  selected_clusters = toset(var.cluster_name)
 }
